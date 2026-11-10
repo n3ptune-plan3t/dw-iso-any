@@ -1,0 +1,54 @@
+name: Download and Release KaOS ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      iso_url:
+        description: 'Direct SourceForge download URL'
+        required: true
+        default: 'https://sourceforge.net/projects/kaos-test/files/iso/KaOS-2026.11.09-x86_64.iso/download'
+      release_tag:
+        description: 'Tag name for the GitHub release'
+        required: true
+        default: 'v2026.11.09'
+
+permissions:
+  contents: write
+
+jobs:
+  download-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download ISO from SourceForge
+        run: |
+          # Extract the filename from the URL path (KaOS-2026.11.09-x86_64.iso)
+          FILENAME=$(basename "${{ inputs.iso_url }}" | sed 's|/download||')
+          if [[ "$FILENAME" == "download" ]]; then
+            FILENAME=$(basename "$(dirname "${{ inputs.iso_url }}")")
+          fi
+          
+          echo "ISO_FILENAME=$FILENAME" >> $GITHUB_ENV
+          echo "Downloading $FILENAME..."
+          
+          # -L follows SourceForge mirror redirects; -f fails on HTTP errors
+          curl -fL -A "Mozilla/5.0" "${{ inputs.iso_url }}" -o "$FILENAME"
+          
+          # Generate SHA256 checksum for verification
+          sha256sum "$FILENAME" > "$FILENAME.sha256"
+          ls -lh "$FILENAME" "$FILENAME.sha256"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: KaOS Release ${{ inputs.release_tag }}
+          body: |
+            Automated mirror release of `${{ env.ISO_FILENAME }}`.
+            
+            **Source:** ${{ inputs.iso_url }}
+          files: |
+            ${{ env.ISO_FILENAME }}
+            ${{ env.ISO_FILENAME }}.sha256
