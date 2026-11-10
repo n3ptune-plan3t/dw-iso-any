@@ -6,7 +6,7 @@ on:
       iso_url:
         description: 'Direct SourceForge download URL'
         required: true
-        default: 'https://sourceforge.net/projects/kaos-test/files/iso/KaOS-2026.11.09-x86_64.iso/download'
+        default: 'https://master.dl.sourceforge.net/project/kaos-test/iso/KaOS-2026.11.09-x86_64.iso?viasf=1&fid=f44af3c95091406f&e=1794418039&st=s2qtyrZnRM2QZ7hG6Do1DQ'
       release_tag:
         description: 'Tag name for the GitHub release'
         required: true
